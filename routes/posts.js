@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const Post = require('../model/posts');
+const { Post, User } = require('../model/posts');
+const { isAuthenticated, authorizeEditorOrAdmin, authorizeAdmin } = require('./authorization')
 
 async function generatePostId() {
     const lastpost = await Post.findOne().sort({ postId: -1 });
-    return lastpos ? lastpos.postId + 1 : 1000;
+    return lastpost ? lastpost.postId + 1 : 1000;
 }
 
-router.get('/', async (req, res) => {
+router.get('/', isAuthenticated, async (req, res) => {
+    // console.log(req);
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const startindex = (page - 1) * limit;
@@ -21,10 +23,10 @@ router.get('/', async (req, res) => {
 })
 
 // get a specific post  
-router.get('/posts/:id', async (req, res) => {
+router.get('/:id', isAuthenticated, async (req, res) => {
     const postId = req.params.id;
     try {
-        const post = await Post.findOne(postId);
+        const post = await Post.findOne({ postId });
         if (!post) {
             return res.status(404).json({ message: 'post of asked id not found' })
         }
@@ -36,7 +38,7 @@ router.get('/posts/:id', async (req, res) => {
 
 const beforeAM = 5;
 
-router.post('/posts', async (req, res) => {
+router.post('/', isAuthenticated, async (req, res) => {
     try {
         const currentTime = new Date();
         const restrictAM = new Date(currentTime);
@@ -52,9 +54,9 @@ router.post('/posts', async (req, res) => {
             content,
             tags
         });
-        console.log(savedPost)
-
+        console.log("this is post request")
         const savedPost = await post.save();
+        console.log(savedPost)
         res.status(201).json(savedPost)
     } catch (err) {
         console.log("this is from post catch error")
@@ -62,7 +64,7 @@ router.post('/posts', async (req, res) => {
     }
 })
 
-router.put('/posts/:id', async (req, res) => {
+router.put('/:id', isAuthenticated, authorizeEditorOrAdmin, async (req, res) => {
     const postId = req.params.id;
     // const updatePost = req.body;
     try {
@@ -90,12 +92,38 @@ router.put('/posts/:id', async (req, res) => {
     }
 })
 
-router.delete('/posts/;id', async (req, res) => {
+router.delete('/:id', isAuthenticated, authorizeAdmin, async (req, res) => {
     const postId = req.params.id;
     try {
         const removePost = await Post.findOneAndDelete({ postId })
         res.json(removePost);
     } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
+
+
+// const role = 'Editor';
+
+router.put('assignRole/:id/role', isAuthenticated, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+
+        if (role !== 'Editor' || role !== 'Viewer') {
+            return res.status(400).json({ message: 'Only ediotr and view can be assigned' })
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' })
+        }
+
+        user.role = role;
+        await user.save();
+
+        res.json({ message: `Role ${role} is assigned to user ${user.username}` })
+    } catch (error) {
         res.status(500).json({ message: err.message })
     }
 })

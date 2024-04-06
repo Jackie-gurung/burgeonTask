@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 
+const UserSchema = mongoose.Schema({
+    username: {
+        type: String,
+        required: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    role: {
+        type: String,
+        enum: ['Admin', 'Editor', 'Viewer'],
+        default: 'Viewer'
+    }
+});
+
 const PostSchema = mongoose.Schema({
     postId: {
         type: Number,
@@ -17,4 +33,8 @@ const PostSchema = mongoose.Schema({
     tags: [String]
 })
 
-module.exports = mongoose.model('Posts', PostSchema)
+module.exports = {
+
+    Post: mongoose.model('Posts', PostSchema),
+    User: mongoose.model('User', UserSchema)
+}
