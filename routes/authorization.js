@@ -5,14 +5,15 @@ const { Post, User } = require('../model/posts');
 
 
 const users = [
-    { id: '1', username: 'admin', role: 'Admin' },
-    { id: '2', username: 'editor', role: 'Editor' },
-    { id: '3', username: 'viewer', role: 'Viewer' }
+    { _id: '6611620865d5c7874c30d1e6', username: 'admin', role: 'Admin' },
+    { id: 2, username: 'editor', role: 'Editor' },
+    { id: 3, username: 'viewer', role: 'Viewer' }
 ];
 
 
 const isAuthenticated = async (req, res, next) => {
     const token = req.headers.authorization;
+    console.log(token)
 
     if (!token) {
         return res.status(401).json({ message: 'Missing authentication token.' });
@@ -20,19 +21,20 @@ const isAuthenticated = async (req, res, next) => {
 
     const user = users.find(user => user.username === token);
 
-    console.log('from auth')
     // assume authenticated 
     if (!user) {
         return res.status(401).json({ message: 'Not authorized incalid token' })
     }
 
     req.user = user;
+    console.log('from auth: working fine')
     next()
 }
 
+
 const authorizeEditorOrAdmin = async (req, res, next) => {
     try {
-        console.log(req.user._id)
+        console.log(req.user)
         // const userId = req.user.id.toString();
         const userId = req.user.id;
 

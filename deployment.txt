@@ -1,0 +1,19 @@
+step to Deploy Node.js application :
+(In this example we will use Heroku)
+1. Createa Heroku Acount and login 
+2. install heroku CLI
+    heroku login
+3. create a new Heroku application in you app directory
+    cd burgeonTask
+    heroku create
+4. add a procfile to specify your start command for application
+    web: npm start
+5. commit your changes to git 
+    git init
+    git add .
+    git commit -m "deploying node js application"
+6. deploy your application
+    heroku git:remote -a appName
+    git push heroku main
+7. open in your browser
+    heroku open
