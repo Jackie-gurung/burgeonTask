@@ -1,14 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const { Post, User } = require('../model/posts');
-const { isAuthenticated, authorizeEditorOrAdmin, authorizeAdmin } = require('./authorization')
+// const { isAuthenticated, authorizeEditorOrAdmin, authorizeAdmin } = require('./authorization')
+const { authenticateJWT } = require('../middleware/authMiddleware')
+const { authorizeEditorOrAdmin, authorizeAdmin } = require('../middleware/authorization')
+
+
+router.use(authenticateJWT);
 
 async function generatePostId() {
     const lastpost = await Post.findOne().sort({ postId: -1 });
     return lastpost ? lastpost.postId + 1 : 1000;
 }
 
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', async (req, res) => {
     // console.log(req);
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -23,7 +28,7 @@ router.get('/', isAuthenticated, async (req, res) => {
 })
 
 // get a specific post  
-router.get('/:id', isAuthenticated, async (req, res) => {
+router.get('/:id', async (req, res) => {
     const postId = req.params.id;
     try {
         const post = await Post.findOne({ postId });
@@ -38,7 +43,7 @@ router.get('/:id', isAuthenticated, async (req, res) => {
 
 const beforeAM = 5;
 
-router.post('/', isAuthenticated, async (req, res) => {
+router.post('/', authorizeEditorOrAdmin, async (req, res) => {
     try {
         const currentTime = new Date();
         const restrictAM = new Date(currentTime);
@@ -64,11 +69,11 @@ router.post('/', isAuthenticated, async (req, res) => {
     }
 })
 
-router.put('/:id', isAuthenticated, authorizeEditorOrAdmin, async (req, res) => {
+router.put('/:id', authorizeEditorOrAdmin, async (req, res) => {
     const postId = req.params.id;
     // const updatePost = req.body;
     try {
-        const post = await Post.findOne(postId);
+        const post = await Post.findOne({ postId });
         if (!post) {
             return res.status(404).json({ message: 'post of asked id not found' })
         }
@@ -92,7 +97,7 @@ router.put('/:id', isAuthenticated, authorizeEditorOrAdmin, async (req, res) => 
     }
 })
 
-router.delete('/:id', isAuthenticated, authorizeAdmin, async (req, res) => {
+router.delete('/:id', authorizeAdmin, async (req, res) => {
     const postId = req.params.id;
     try {
         const removePost = await Post.findOneAndDelete({ postId })
@@ -105,7 +110,7 @@ router.delete('/:id', isAuthenticated, authorizeAdmin, async (req, res) => {
 
 // const role = 'Editor';
 
-router.put('assignRole/:id/role', isAuthenticated, authorizeAdmin, async (req, res) => {
+router.put('assignRole/:id/role', authorizeAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { role } = req.body;

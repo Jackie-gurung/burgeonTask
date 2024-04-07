@@ -7,6 +7,7 @@ require('dotenv/config');
 
 
 const postRoute = require('./routes/posts')
+const authRoute = require('./routes/auth')
 
 const app = express();
 const PORT = 3000;
@@ -29,6 +30,7 @@ app.use(bodyParser.json())
 mongoose.connect(process.env.DB_CONNECTION)
     .then(() => {  // Connection successful
         app.use('/posts', postRoute);
+        app.use('/auth', authRoute);
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });

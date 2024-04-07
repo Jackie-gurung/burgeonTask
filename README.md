@@ -57,6 +57,8 @@ This command will start the server. By default, it will run on port 3000, but yo
 ### API Endpoints
 
 The Burgeon Task application provides the following API endpoints:
+POST /auth/register: register using username and password
+POST /auth/login: login using username and password
 
     GET /posts: Retrieve all posts with pagination support.
     GET /posts/:id: Retrieve a specific post by its ID.
@@ -67,13 +69,27 @@ The Burgeon Task application provides the following API endpoints:
 
 ### Authentication
 
-The application uses dummy token-based authentication.
+This application uses JSON Web Tokens (JWT) for secure authentication.
+
+Create a .env file (outside your codebase) and add a line like:
+
+```bash
+JWT_SECRET=your_very_strong_secret_key
+```
+
+Access the key in your code using process.env.JWT_SECRET
+
+you can generate secret key in your cli
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'));"
+```
 
 #### Role-Based Access Control
 
     Users with the 'Admin' role have full access to CRUD operations and can assign the 'Editor' role to other users.
     Users with the 'Editor' role can perform CRUD operations but cannot delete posts.
-    Users with the 'Viewer' role can  view and create posts but cannot update, or delete them.
+    Users with the 'Viewer' role can  view but  cannot post, update, or delete them.
 
 ## Contributing
 
